@@ -1,14 +1,48 @@
 const express=require('express');
-const app=express();
-const port=process.env.PORT || 5000;
 const cors=require('cors')
+const app=express();
+require('dotenv').config()
+const port=process.env.PORT || 5000;
 
 app.use(cors())
+
 const categories=require('./Data/Categories.json')
 const discount=require('./Data/Discount.json')
 const for_you=require('./Data/forYou.json')
 const banner_Categories=require('./Data/BannerCategories.json')
 const all_products=require('./Data/All_Products.json')
+
+// mongoBD connection
+
+
+
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Pass}@cluster0.yq5wikg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
+  }
+}
+run().catch(console.dir);
+
+
 
 app.get('/',(req,res)=>{
 res.send('Hello Container Shoes')
@@ -36,21 +70,7 @@ app.get('/all_products/:id',(req,res)=>{
     const selectedProducts=all_products.find(n=>n._Id===id)
     res.send(selectedProducts)
 })
-// get Products by Category
-// app.get('/all_products/:category',async(req,res)=>{
-//     const category=req.params.category
-//        const query={Category:category}
-//        console.log(query)
-//        const result=await all_products.filter(query)
-//        res.send(result)
-    
-// })
-app.get('all_products/:category',(req,res)=>{
-    const category=req.params.category
-    const query={Category:category}
-    const result=all_products.filter(query)
-    res.send(result)
-})
+
 
 app.listen(port,()=>{
     console.log(`Container shoes is running on ${port}`)
