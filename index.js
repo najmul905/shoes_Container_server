@@ -5,12 +5,9 @@ require('dotenv').config()
 const port = process.env.PORT || 5000;
 
 app.use(cors())
+app.use(express.json())
 
-const categories = require('./Data/Categories.json')
-const discount = require('./Data/Discount.json')
-const for_you = require('./Data/forYou.json')
-const banner_Categories = require('./Data/BannerCategories.json')
-// const all_products=require('./Data/All_Products.json')
+
 
 // mongoBD connection
 
@@ -32,31 +29,78 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
 
-        const ProductCollection = client.db("Shoes_containerDB").collection("All_Products_Data")
+        const Shoes_ContainerDB= client.db("Shoes_containerDB")
+        const ProductCollection=Shoes_ContainerDB.collection("All_Products_Data")
+        const BannerCategoryCollection=Shoes_ContainerDB.collection("Banner_Category")
+        const JustForCustomerCollection=Shoes_ContainerDB.collection("Just_For_Customer")
+        const OfferCollection=Shoes_ContainerDB.collection("Offer")
+        const userDataCollection=Shoes_ContainerDB.collection("UserData")
 
-        // Read data from mongoDB
-
+        // Read data from mongoDB(Get)
         app.get("/all_products", async (req, res) => {
             const result = await ProductCollection.find().toArray()
             res.send(result)
         })
-
+       
+        app.get("/banner_category", async (req, res) => {
+            const result = await BannerCategoryCollection.find().toArray()
+            res.send(result)
+        })
+        app.get("/just_for_customer", async (req, res) => {
+            const result = await JustForCustomerCollection.find().toArray()
+            res.send(result)
+        })
+        app.get("/offer", async (req, res) => {
+            const result = await OfferCollection.find().toArray()
+            res.send(result)
+        })
       
         app.get("/all_products/:category", async (req, res) => {
-            
-                const category=req.params.category
-                const query={Category:category}
-                const result= await ProductCollection.find(query).toArray()
-                res.send(result)     
+            const category=req.params.category
+            const query={Category:category}
+            const result= await ProductCollection.find(query).toArray()
+            if(category=="All Category"){
+                const result = await ProductCollection.find().toArray()
+                return res.send(result)
+            }
+            res.send(result)     
         })
-        app.get("/all_products/category/:id",async(req,res)=>{
+        app.get("/all_products/data/:id",async(req,res)=>{
             const id=req.params.id
             const query={_id: new ObjectId(id)}
             const result=await ProductCollection.findOne(query)
             res.send(result)
         })
+        app.get('/user',async(req,res)=>{
+            const result=await userDataCollection.find().toArray()
+            res.send(result)
+        })
+        // Create data
+        app.post("/user", async (req, res) => {
+           const userData=req.body
+           const email=userData.email
+           const query={email:email}
+           const existingEmail= await userDataCollection.findOne(query)
+           if(existingEmail){
+           return res.send({message: 'You already existing'})
+           }
+           else{
+            const addUser=await userDataCollection.insertOne(userData)
+            res.send(addUser)
+           }
+           console.log(userData)
+        });
+        
+        app.post('/all_products',async(req,res)=>{
+           const item=req.body
+           console.log(item)
+          const result=await ProductCollection.insertOne(item)
+          res.send(result)
+           
+        })
+        app.get("/category",(req,res)=>{
 
-
+        })
 
 
         await client.connect();
@@ -75,30 +119,6 @@ run().catch(console.dir);
 app.get('/', (req, res) => {
     res.send('Hello Container Shoes')
 })
-
-// app.get('/categories',(req,res)=>{
-// res.send(categories)
-// })
-// app.get('/discount',(req,res)=>{
-//     res.send(discount)
-// })
-// app.get('/banner_Categories',(req,res)=>{
-//     res.send(banner_Categories)
-// })
-// app.get('/for_you',(req,res)=>{
-//     res.send(for_you)
-// })
-// app.get('/all_products',(req,res)=>{
-//     res.send(all_products)
-// })
-// Get One products by Id
-// app.get('/all_products/:id',(req,res)=>{
-//     const id=req.params.id
-//     console.log(id)
-//     const selectedProducts=all_products.find(n=>n._Id===id)
-//     res.send(selectedProducts)
-// })
-
 
 app.listen(port, () => {
     console.log(`Container shoes is running on ${port}`)
