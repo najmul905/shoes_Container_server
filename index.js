@@ -50,11 +50,58 @@ async function run() {
             const result = await JustForCustomerCollection.find().toArray()
             res.send(result)
         })
+        app.get("/just_for_customer/:id", async(req,res)=>{
+            const id=req.params.id
+            const query={_id:new ObjectId(id)}
+            const result= await JustForCustomerCollection.findOne(query)
+            res.send(result)
+
+        })
+        app.put('/just_for_customer/:id',async(req,res)=>{
+            const id=req.params.id
+            const filter={_id: new ObjectId(id)}
+            const products=req.body
+            const options={upsert:true}
+            const editProducts={
+                $set:{
+                    Name:products.Name,
+                    Price:products.Price,
+                    Description:products.Description,
+                    Image:products.Image
+                }
+            }
+            const result=await JustForCustomerCollection.updateOne(filter,editProducts,options)
+            res.send(result)
+        })
         app.get("/offer", async (req, res) => {
             const result = await OfferCollection.find().toArray()
             res.send(result)
         })
-      
+      app.get("/offer/:id",async(req,res)=>{
+        const id=req.params.id
+        const query={_id: new ObjectId(id)}
+        const result= await OfferCollection.findOne(query)
+        res.send(result)
+      })
+      app.put('/offer/:id', async(req,res)=>{
+        const id=req.params.id
+        const data=req.body
+        const filter={_id: new ObjectId(id)}
+        const options={upsert:false}
+        const update={
+            $set:{
+                Name:data.Name,
+                Price:data.Price,
+                Description:data.Description,
+                DiscountPercentage:data.DiscountPercentage,
+                Image:data.Image
+            }
+        }
+        console.log(update)
+        const UpdateData=await OfferCollection.updateOne(filter,update,options)
+        res.send(UpdateData)
+
+      })
         app.get("/all_products/:category", async (req, res) => {
             const category=req.params.category
             const query={Category:category}
