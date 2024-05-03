@@ -70,7 +70,8 @@ async function run() {
                     Image:products.Image
                 }
             }
-            const result=await JustForCustomerCollection.updateOne(filter,editProducts,options)
+            console.log(editProducts,products)
+            const result=await JustForCustomerCollection.updateOne(filter,editProducts)
             res.send(result)
         })
         app.get("/offer", async (req, res) => {
@@ -116,6 +117,24 @@ async function run() {
             const id=req.params.id
             const query={_id: new ObjectId(id)}
             const result=await ProductCollection.findOne(query)
+            res.send(result)
+        })
+        app.put("/all_products/data/:id",async(req,res)=>{
+            const id=req.params.id 
+            const data=req.body 
+            const filter={_id: new ObjectId(id)}
+            const options={upsert:true}
+            const update={
+                $set:{
+                    Name:data.Name, 
+                    Price:data.Price,
+                    Details:data.Details,
+                    Image:data.Image,
+                    Category:data.Category
+                }
+            }
+            console.log(update)
+            const result=await ProductCollection.updateOne(filter,update,options)
             res.send(result)
         })
         app.get('/user',async(req,res)=>{
