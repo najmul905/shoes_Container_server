@@ -74,6 +74,12 @@ async function run() {
             const result=await JustForCustomerCollection.updateOne(filter,editProducts)
             res.send(result)
         })
+        app.delete('/just_for_customer/:id',async(req,res)=>{
+            const id=req.params.id
+            const query={_id: new ObjectId(id)}
+            const result=await JustForCustomerCollection.deleteOne(query)
+            res.send(result)
+                })
         app.get("/offer", async (req, res) => {
             const result = await OfferCollection.find().toArray()
             res.send(result)
@@ -84,6 +90,12 @@ async function run() {
         const result= await OfferCollection.findOne(query)
         res.send(result)
       })
+      app.delete('/offer/:id',async(req,res)=>{
+        const id=req.params.id
+        const query={_id: new ObjectId(id)}
+        const result=await OfferCollection.deleteOne(query)
+        res.send(result)
+          })
       app.put('/offer/:id', async(req,res)=>{
         const id=req.params.id
         const data=req.body
@@ -113,12 +125,14 @@ async function run() {
             }
             res.send(result)     
         })
+        // get all Products data Id
         app.get("/all_products/data/:id",async(req,res)=>{
             const id=req.params.id
             const query={_id: new ObjectId(id)}
             const result=await ProductCollection.findOne(query)
             res.send(result)
         })
+        // Create all Products
         app.put("/all_products/data/:id",async(req,res)=>{
             const id=req.params.id 
             const data=req.body 
@@ -135,6 +149,13 @@ async function run() {
             }
             console.log(update)
             const result=await ProductCollection.updateOne(filter,update,options)
+            res.send(result)
+        })
+        // Delete One item from all Products
+        app.delete('/all_products/data/:id',async(req,res)=>{
+            const id=req.params.id 
+            const query={_id: new ObjectId(id)}
+            const result=await ProductCollection.deleteOne(query)
             res.send(result)
         })
         app.get('/user',async(req,res)=>{
