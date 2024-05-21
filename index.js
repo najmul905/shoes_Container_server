@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors')
 const app = express();
 require('dotenv').config()
+const stripe=require('stripe')(process.env.payment_secret_key)
 const port = process.env.PORT || 5000;
 
 app.use(cors())
@@ -35,6 +36,8 @@ async function run() {
         const JustForCustomerCollection=Shoes_ContainerDB.collection("Just_For_Customer")
         const OfferCollection=Shoes_ContainerDB.collection("Offer")
         const userDataCollection=Shoes_ContainerDB.collection("UserData")
+        const CardCollection=Shoes_ContainerDB.collection("CardData")
+        const PaymentCollection=Shoes_ContainerDB.collection("payment")
 
         // Read data from mongoDB(Get)
         app.get("/all_products", async (req, res) => {
@@ -185,11 +188,70 @@ async function run() {
           res.send(result)
            
         })
-        app.get("/category",(req,res)=>{
+       app.post('/card',async(req,res)=>{
+        const cardData=req.body
+        console.log(cardData)
+        const result=await CardCollection.insertOne(cardData)
+        res.send(result)
+       })
+       app.get("/card",async(req,res)=>{
+        const result=await CardCollection.find().toArray()
+        res.send(result)
+       })
+    //    app.get("/card/:id",async(req,res)=>{
+    //     const id=req.params.id 
+    //     const query={_id: new ObjectId(id)}
+    //     const result=await CardCollection.findOne(query)
+    //     res.send(result)
+    //    })
+       app.get("/card/:email",async(req,res)=>{
+        const email=req.params.email
+        const query={Email:email}
+        const result=await CardCollection.find(query).toArray()
+        res.send(result)
+       })
+       app.get('/card/data/:id',async(req,res)=>{
+        const id=req.params.id 
+        const query={_id:new ObjectId(id)}
+        const result=await CardCollection.findOne(query)
+        res.send(result)
+       })
+       app.delete('/card/data/:id',async(req,res)=>{
+        const id=req.params.id 
+        const query={_id:new ObjectId(id)}
+        const result=await CardCollection.deleteOne(query)
+        res.send(result)
+       })
+       app.post("/payment",async(req,res)=>{
+        const payment=req.body 
+        const query={_id:{$in: payment.cardId.map(id=> new ObjectId(id))}}
+        const InsertResult=await PaymentCollection.insertOne(payment)
+        const DeleteResult=await CardCollection.deleteMany(query)
+        res.send({InsertResult,DeleteResult})
+       })
 
-        })
-
-
+       app.post("/create_payment_intent", async (req, res) => { // Fix the endpoint name
+        try {
+          const { price } = req.body; // Make sure to use the correct key 'price'
+          if (!price) {
+            return res.status(400).send({ error: "Price is required" });
+          }
+      
+          const amount = price * 100; // Convert price to cents
+          const paymentIntent = await stripe.paymentIntents.create({ // Fix the method name
+            amount: amount,
+            currency: 'usd',
+            payment_method_types: ["card"]
+          });
+      
+          res.send({
+            clientSecret: paymentIntent.client_secret,
+          });
+        } catch (error) {
+          console.error('Error creating payment intent:', error);
+          res.status(500).send({ error: 'Internal Server Error' });
+        }
+      });
         await client.connect();
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
