@@ -180,7 +180,30 @@ async function run() {
            }
            console.log(userData)
         });
-        
+        app.get("/user/:id",async(req,res)=>{
+            const id=req.params.id 
+            const query={_id: new ObjectId(id)}
+            const result=await userDataCollection.findOne(query)
+            res.send(result)
+        })
+        app.delete('/user/:id',async(req,res)=>{
+            const id=req.params.id 
+            const query={_id:new ObjectId(id)}
+            const result=await userDataCollection.deleteOne(query) 
+            res.send(result)
+        })
+        app.patch("/user/:id",async(req,res)=>{
+            const id=req.params.id 
+            const data=req.body 
+            const filter={_id: new ObjectId(id)}
+            const update={
+                $set:{
+                    status:data.status
+                }
+            }
+            const result=await userDataCollection.updateOne(filter,update)
+            res.send(result)
+        })
         app.post('/all_products',async(req,res)=>{
            const item=req.body
            console.log(item)
